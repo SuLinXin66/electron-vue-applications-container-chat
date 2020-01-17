@@ -9,6 +9,7 @@
   import {Component, Vue} from "vue-property-decorator";
 
   import Chat from "@/views/chat/Chat.vue";
+  import {RemoteEventNames} from "@/const";
 
   @Component({
     components: {
@@ -16,7 +17,9 @@
     }
   })
   export default class App extends Vue {
-
+    private mounted() {
+      this.electronIpcRenderer.send(RemoteEventNames.chatMainLoading)
+    }
   }
 </script>
 

@@ -223,6 +223,7 @@
             text-overflow: ellipsis;
             white-space: nowrap;
             font-weight: bold;
+            padding-right: 28px;
           }
         }
 
