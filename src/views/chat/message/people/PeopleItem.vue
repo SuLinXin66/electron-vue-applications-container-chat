@@ -61,7 +61,7 @@
 
       .user-sign {
         width: 98%;
-        color: #999999;
+        color: rgba(0, 0, 0, 0.5);
         font-size: 12px;
         display: block;
         overflow: hidden;

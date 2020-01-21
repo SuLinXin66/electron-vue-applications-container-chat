@@ -46,6 +46,7 @@
     cursor: pointer;
 
     &.active > .left > i {
+      margin-top: -3px;
       display: block;
       transform: rotate(90deg);
     }

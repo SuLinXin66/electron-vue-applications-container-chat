@@ -3,7 +3,7 @@
     <span @click="hideWindow" title="关闭" class="close-btn chat-font icon-guanbi"></span>
     <div class="user-info">
       <div class="left">
-        <div class="user-img">
+        <div :style="calcStyle" class="user-img">
           <Dropdown class="state-pos">
             <div :class="`now-state ${imgState}`"></div>
             <DropdownMenu slot="list">
@@ -25,7 +25,7 @@
       </div>
       <div class="right">
         <div class="top">
-          <span :title="userName" class="user-name">{{userName}}</span>
+          <span :title="userName" class="user-name">{{`${userInfo.userInfo.userName}( ${userInfo.userInfo.name} )`}}</span>
         </div>
         <div class="bottom">
           <span :title="signText" @click.stop.prevent="signTextClick" v-show="!isInSign"
@@ -41,9 +41,10 @@
 </template>
 
 <script lang="ts">
-  import {Component, Vue} from "vue-property-decorator";
+  import {Component, Prop, Vue} from "vue-property-decorator";
 
   import {Dropdown, DropdownMenu, DropdownItem, RadioGroup, Radio, Icon, Input} from "view-design";
+  import {UserChatInfo} from "@/types";
 
   @Component({
     components: {
@@ -51,6 +52,9 @@
     }
   })
   export default class TopContent extends Vue {
+
+    @Prop({type: Object, default: () => ({})})
+    private userInfo!: UserChatInfo;
 
     private nowState: 'online' | 'busy' = "online";
 
@@ -62,11 +66,23 @@
 
     private isEnter: boolean = false;
 
+    private get calcStyle() {
+      debugger
+      let style: any = {};
+      if (this.userInfo.icon) {
+        style.backgroundImage = `url(${this.userInfo.icon})`
+      } else {
+        style.border = `1px solid black`
+      }
+
+      return style;
+    }
+
     private get signText() {
-      if (typeof this.sign == "undefined" || this.sign == "") {
+      if (typeof this.userInfo.meAbout == "undefined" || this.userInfo.meAbout == "") {
         return "再此输入说说"
       } else {
-        return this.sign
+        return this.userInfo.meAbout
       }
     }
 
@@ -113,7 +129,6 @@
       }
       this.isEnter = isEnter;
       this.isInSign = !this.isInSign;
-
     }
 
   }
@@ -174,7 +189,7 @@
           position: relative;
           width: 58px;
           height: 58px;
-          background-image: url("../../../assets/timg.jpeg");
+          /*background-image: url("../../../assets/timg.jpeg");*/
           background-size: 100% 100%;
           border-radius: 29px;
           margin: 18px 0 0 12px;
@@ -203,6 +218,7 @@
           width: 100%;
           height: 50%;
           overflow: hidden;
+          color: white;
         }
 
         .top {
