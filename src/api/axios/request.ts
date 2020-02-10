@@ -1,5 +1,5 @@
 import axios, {AxiosPromise, AxiosResponse} from "axios";
-import {Message} from "view-design";
+// import {Message} from "view-design";
 import responseHandler from "./callback/responseHandler";
 import {AjaxRequest} from "../types";
 import qs from "qs";
@@ -29,28 +29,28 @@ function handleUrl(url: string): string {
  * 请求拦截
  */
 axios.interceptors.request.use(config => {
-  (Message as any).loading({
-    content: "请求中...",
-    duration: 0
-  });
+  // (Message as any).loading({
+  //   content: "请求中...",
+  //   duration: 0
+  // });
   if (config.url) {
     config.url = handleUrl(config.url);
   }
   return config;
 }, (error) => {
-  (Message as any).destroy();
-  (Message as any).error("请求服务器失败");
+  // (Message as any).destroy();
+  // (Message as any).error("请求服务器失败");
 });
 
 /**
  * 响应拦截
  */
 axios.interceptors.response.use(response => {
-  (Message as any).destroy();
+  // (Message as any).destroy();
   return responseHandler(response);
 }, (error: any) => {
-  (Message as any).destroy();
-  (Message as any).error("获取服务器响应失败!");
+  // (Message as any).destroy();
+  // (Message as any).error("获取服务器响应失败!");
   return Promise.reject(error)
 });
 

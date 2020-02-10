@@ -1,11 +1,16 @@
 <template>
   <div :style="calcStyle" class="chat-view">
+    <v-contextmenu ref="contextmenu">
+      <v-contextmenu-item>新增</v-contextmenu-item>
+      <v-contextmenu-item>删除</v-contextmenu-item>
+      <v-contextmenu-item>修改</v-contextmenu-item>
+    </v-contextmenu>
     <TopContent :user-info="userInfo"/>
     <Selects/>
-    <div class="msg-content">
+    <div v-contextmenu:contextmenu class="msg-content">
       <Vuescroll :ops="ops">
         <keep-alive>
-          <router-view/>
+          <router-view @routesContentMenuShow="routesContentMenuShow" @routesContentMenuHide="()=>$refs['contextmenu'].hide()" :user-list="userList"/>
         </keep-alive>
       </Vuescroll>
     </div>
@@ -18,14 +23,12 @@
 
   import TopContent from "@/views/chat/top/TopContent.vue";
   import Selects from "@/views/chat/selects/Selects.vue";
-  import PeopleGroup from "@/views/chat/message/people/PeopleGroup.vue";
 
   import Vuescroll from "vuescroll"
-  import {UserChatInfo} from "@/types";
+  import {ContentMenuEvent, UserChatInfo, UserList} from "@/types";
 
   @Component({
     components: {
-      PeopleGroup,
       TopContent, Selects, Vuescroll
     }
   })
@@ -42,6 +45,18 @@
     @Prop({type: Object, default: () => ({})})
     private userInfo!: UserChatInfo;
 
+    @Prop({type: Object, default: () => ({})})
+    private userList!: UserList;
+
+    private routesContentMenuShow(e: ContentMenuEvent) {
+      console.log(e);
+      console.log("点击触发");
+      (this.$refs["contextmenu"] as any).show({
+        top: e.event.y,
+        left: e.event.x
+      });
+    };
+
     private get calcStyle() {
       let style: any = {};
 
@@ -53,7 +68,6 @@
         style.backgroundColor = this.userInfo.chatBgcColor;
       }
 
-      console.log(style);
       return style
     }
 

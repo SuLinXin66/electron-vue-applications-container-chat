@@ -5,17 +5,21 @@
       <div class="left">
         <div :style="calcStyle" class="user-img">
           <Dropdown class="state-pos">
-            <div :class="`now-state ${imgState}`"></div>
+            <div :class="`now-state ${imgStateStr}`"></div>
             <DropdownMenu slot="list">
               <DropdownItem>
                 <RadioGroup v-model="imgState" vertical>
-                  <Radio label="online">
+                  <Radio :disabled="imgState==='3'" label="0">
                     <i class="online"></i>
                     <span>在线</span>
                   </Radio>
-                  <Radio label="busy">
+                  <Radio :disabled="imgState==='3'" label="1">
                     <i class="busy"></i>
                     <span>忙碌</span>
+                  </Radio>
+                  <Radio disabled label="2">
+                    <i class="offline"></i>
+                    <span>离线</span>
                   </Radio>
                 </RadioGroup>
               </DropdownItem>
@@ -25,7 +29,7 @@
       </div>
       <div class="right">
         <div class="top">
-          <span :title="userName" class="user-name">{{`${userInfo.userInfo.userName}( ${userInfo.userInfo.name} )`}}</span>
+          <span :title="calcUserName" class="user-name">{{calcUserName}}</span>
         </div>
         <div class="bottom">
           <span :title="signText" @click.stop.prevent="signTextClick" v-show="!isInSign"
@@ -45,6 +49,8 @@
 
   import {Dropdown, DropdownMenu, DropdownItem, RadioGroup, Radio, Icon, Input} from "view-design";
   import {UserChatInfo} from "@/types";
+  import {sendAjax} from "@/api/axios/request";
+  import {updateUserAboutDesc, updateUserNowStatues} from "@/api";
 
   @Component({
     components: {
@@ -53,10 +59,8 @@
   })
   export default class TopContent extends Vue {
 
-    @Prop({type: Object, default: () => ({})})
+    @Prop({required: false, type: Object, default: () => ({})})
     private userInfo!: UserChatInfo;
-
-    private nowState: 'online' | 'busy' = "online";
 
     private isInSign: boolean = false;
 
@@ -66,8 +70,14 @@
 
     private isEnter: boolean = false;
 
+    private get calcUserName() {
+      if (this.userInfo && this.userInfo.userInfo) {
+        return `${this.userInfo.userInfo.userName}( ${this.userInfo.userInfo.name} )`
+      }
+      return ""
+    }
+
     private get calcStyle() {
-      debugger
       let style: any = {};
       if (this.userInfo.icon) {
         style.backgroundImage = `url(${this.userInfo.icon})`
@@ -80,7 +90,7 @@
 
     private get signText() {
       if (typeof this.userInfo.meAbout == "undefined" || this.userInfo.meAbout == "") {
-        return "再此输入说说"
+        return "再此输入自我描述"
       } else {
         return this.userInfo.meAbout
       }
@@ -88,13 +98,49 @@
 
     // 我要money我要money要要要
 
-    private get imgState() {
-      return this.nowState;
+    private get imgStateStr() {
+      const nowStatus = parseInt(this.userInfo.nowStatus);
+      if (nowStatus == 0) {
+        return "online";
+      }
+
+      if (nowStatus == 1) {
+        return "busy";
+      }
+
+      return "offline";
     }
 
-    private set imgState(str: 'online' | 'busy') {
-      console.log("除法");
-      this.nowState = str
+    private get imgState() {
+      if (this.userInfo && typeof this.userInfo.nowStatus != "undefined") {
+        return this.userInfo.nowStatus.toString();
+      }
+      return "3"
+    }
+
+    private set imgState(str: string) {
+      this.settingStatues(str)
+    }
+
+    private async settingStatues(str: string) {
+      try {
+        await sendAjax(updateUserNowStatues({
+          userInfo: {
+            idCode: this.userInfo.userInfo.idCode
+          },
+          nowStatus: str
+        } as any));
+        this.userInfo.nowStatus = str
+      } catch (e) {
+        this.electronRemote.dialog.showMessageBoxSync(this.electronRemote.getCurrentWindow(), {
+          title: "修改失败",
+          message: "用户当前在线状态修改失败, 请稍后重新尝试",
+          type: 'error',
+          buttons: ["确定"],
+          defaultId: 0
+        });
+      }
+
     }
 
     private hideWindow() {
@@ -118,14 +164,44 @@
     private signTextClick() {
       this.isInSign = !this.isInSign;
       if (this.isInSign) {
-        setTimeout(() => (this.$refs["signInput"] as Input).focus(), 100)
+        setTimeout(() => {
+          (this.$refs["signInput"] as Input).focus();
+          console.log((this.$refs["signInput"] as Input));
+          ((this.$refs["signInput"] as Input).$refs["input"] as any).value = this.userInfo.meAbout;
+        }, 100)
       }
     }
 
-    private updateSign(isEnter: boolean) {
+    private async updateSign(isEnter: boolean) {
       if (this.isEnter) {
         this.isEnter = false;
         return
+      }
+      const signVal = (this.$refs["signInput"] as Input).value;
+      try {
+        await sendAjax(updateUserAboutDesc({
+          userInfo: {
+            idCode: this.userInfo.userInfo.idCode
+          },
+          meAbout: signVal
+        } as any));
+        this.userInfo.meAbout = signVal as string;
+      } catch (e) {
+        let title = "修改自我描述失败";
+        let content = e.message;
+        if (e.code == 12) {
+          content = "连接服务器失败, 请检查您配置的地址是否正确"
+        } else if (e.data && e.data.msg) {
+          title += "( " + e.data.code + " )";
+          content = e.data.msg;
+        }
+        this.electronRemote.dialog.showMessageBoxSync(this.electronRemote.getCurrentWindow(), {
+          title,
+          message: content,
+          type: 'error',
+          buttons: ["确定"],
+          defaultId: 0
+        });
       }
       this.isEnter = isEnter;
       this.isInSign = !this.isInSign;
@@ -141,6 +217,10 @@
 
   .busy {
     background-color: darkorange;
+  }
+
+  .offline {
+    background-color: #999999;
   }
 
   .chat-top {

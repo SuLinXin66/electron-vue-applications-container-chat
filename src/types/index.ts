@@ -37,3 +37,23 @@ export interface UserChatInfo {
   nowStatus: string
   userInfo: UserInfo
 }
+
+export interface UserGroup {
+  id: number
+  name: string
+  list: Array<UserChatInfo>
+}
+
+export interface UserList {
+  default: UserGroup
+  more: Array<UserGroup>
+}
+
+export type ContentMenuType = "group" | "item" | "other"
+
+export interface ContentMenuEvent {
+  type: ContentMenuType
+  event: MouseEvent
+  groupId?: number
+  itemId?: number
+}

@@ -4,6 +4,10 @@ import router from './router'
 import store from './store'
 import 'view-design/dist/styles/iview.css'
 import './assets/fonts/chat/chatFont.css'
+import contentmenu from 'v-contextmenu'
+import 'v-contextmenu/dist/index.css'
+
+Vue.use(contentmenu);
 
 import ElectronMatch from "@/utils/electron";
 

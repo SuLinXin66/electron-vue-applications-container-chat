@@ -1,24 +1,28 @@
 <template>
-  <div @click.stop.prevent="showOrHidePeople" :class="`people-group ${isShowPeoples ? 'active': ''}`">
+  <div @click.stop.prevent="showOrHidePeople" @contextmenu.stop.prevent="routesContentMenuShow"
+       :class="`people-group ${isShowPeoples ? 'active': ''}`">
     <div class="left">
       <i class="chat-font icon-jiantou"></i>
     </div>
     <div class="right">
-      <span>我是描述文字</span>
+      <span>{{userGroup.name}}</span>
     </div>
     <div v-show="isShowPeoples" class="peoples">
-      <PeopleItem/>
-      <PeopleItem/>
-      <PeopleItem/>
-      <PeopleItem/>
-      <PeopleItem/>
+      <PeopleItem v-for="(item) in userGroup.list" :key="item.userId" @routesContentMenuShow="itemRoutesContentMenuShow"
+                  @routesContentMenuHide="routesContentMenuHide" :user-chat-info="item"/>
+      <!--      <PeopleItem/>-->
+      <!--      <PeopleItem/>-->
+      <!--      <PeopleItem/>-->
+      <!--      <PeopleItem/>-->
+      <!--      <PeopleItem/>-->
     </div>
   </div>
 </template>
 
 <script lang="ts">
-  import {Component, Vue} from "vue-property-decorator";
+  import {Component, Emit, Prop, Vue} from "vue-property-decorator";
   import PeopleItem from "@/views/chat/message/people/PeopleItem.vue";
+  import {ContentMenuEvent, UserGroup} from "@/types";
 
   @Component({
     components: {
@@ -27,9 +31,37 @@
   })
   export default class PeopleGroup extends Vue {
 
-    private isShowPeoples: boolean = false
+    @Prop({type: Object, default: () => ({})})
+    private userGroup!: UserGroup;
+
+    private isShowPeoples: boolean = false;
+
+
+    private mounted(): void {
+    }
+
+    private itemRoutesContentMenuShow(e: ContentMenuEvent) {
+      e.groupId = this.userGroup.id;
+      return e;
+    }
+
+    @Emit("routesContentMenuShow")
+    private routesContentMenuShow(e: MouseEvent): ContentMenuEvent {
+      return {
+        type: "group",
+        groupId: this.userGroup.id,
+        event: e
+      };
+    }
+
+    @Emit("routesContentMenuHide")
+    private routesContentMenuHide() {
+      console.log("单机按下")
+      return "";
+    }
 
     private showOrHidePeople() {
+      this.routesContentMenuHide();
       this.isShowPeoples = !this.isShowPeoples;
     }
 
@@ -46,7 +78,7 @@
     cursor: pointer;
 
     &.active > .left > i {
-      margin-top: -3px;
+      margin-top: -5px;
       display: block;
       transform: rotate(90deg);
     }

@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <Chat :user-info="userInfo"/>
+    <Chat :user-list="userList" :user-info="userInfo"/>
   </div>
 </template>
 
@@ -9,9 +9,9 @@
 
   import Chat from "@/views/chat/Chat.vue";
   import {RemoteEventNames, UserLocalEventNames} from "@/const";
-  import {EventReturn, UserChatInfo, UserInfo} from "@/types";
+  import {EventReturn, UserChatInfo, UserInfo, UserList} from "@/types";
   import {sendAjax} from "@/api/axios/request";
-  import {queryUserChat} from "@/api";
+  import {queryDefaultUserList, queryUserChat} from "@/api";
 
   @Component({
     components: {
@@ -21,6 +21,8 @@
   export default class App extends Vue {
 
     private userInfo: UserChatInfo = {} as any;
+
+    private userList: UserList = {} as any;
 
     private async mounted() {
       const data: EventReturn<UserInfo> = this.electronIpcRenderer.sendSync(UserLocalEventNames.queryUserInfo);
@@ -32,8 +34,22 @@
         const resp = await sendAjax(queryUserChat({
           idCode: data.result!.idCode
         }));
+
         this.userInfo = resp.data.result;
-        console.log(this.userInfo)
+
+        const userListResp = await sendAjax(queryDefaultUserList({
+          idCode: data.result!.idCode
+        }));
+
+
+        this.userList = {
+          default: {
+            id: 0,
+            name: this.userInfo.userInfo.companyName,
+            list: userListResp.data.result
+          },
+          more: []
+        };
         this.electronIpcRenderer.send(RemoteEventNames.chatMainLoading)
       } catch (e) {
         let content = "请稍后重新尝试";

@@ -1,17 +1,19 @@
 <template>
-  <div @click.stop.prevent="" class="people-item">
+  <div @click.stop.prevent="routesContentMenuHide" @contextmenu="routesContentMenuShow" class="people-item">
     <div class="left" :class="isOnLine || isGroup ? '':'offline'">
-      <img src="../../../../assets/timg.jpeg" alt="头像">
+      <img v-show="typeof userChatInfo.icon !== 'undefined' && userChatInfo.icon.length && userChatInfo.icon.length > 1"
+           :src="userChatInfo.icon" alt="头像">
     </div>
     <div class="right">
-      <span :class="isGroup?'group-name' : 'user-name'">wuhen(大帅锅)</span>
-      <span v-if="!isGroup" class="user-sign">没办法太帅了!没办法太帅了!没办法太帅了!没办法太帅了!没办法太帅了!没办法太帅了!</span>
+      <span :class="isGroup?'group-name' : 'user-name'">{{`${userChatInfo.userInfo.userName}( ${userChatInfo.userInfo.name} )`}}</span>
+      <span v-if="!isGroup" class="user-sign">{{userChatInfo.meAbout}}</span>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-  import {Component, Prop, Vue} from "vue-property-decorator";
+  import {Component, Emit, Prop, Vue} from "vue-property-decorator";
+  import {ContentMenuEvent, UserChatInfo} from "@/types";
 
   @Component({})
   export default class PeopleItem extends Vue {
@@ -19,8 +21,32 @@
     @Prop({type: Boolean, default: false})
     private isGroup!: boolean;
 
-    @Prop({type: Boolean, default: true})
-    private isOnLine!: boolean;
+    // @Prop({type: Boolean, default: true})
+    // private isOnLine!: boolean;
+
+    private get isOnLine() {
+      if (!this.userChatInfo || !this.userChatInfo.nowStatus || parseInt(this.userChatInfo.nowStatus) === 2) {
+        return false
+      }
+      return true;
+    }
+
+    @Prop({type: Object, default: () => ({})})
+    private userChatInfo!: UserChatInfo;
+
+    @Emit("routesContentMenuShow")
+    private routesContentMenuShow(event: MouseEvent): ContentMenuEvent {
+      return {
+        type: "item",
+        itemId: this.userChatInfo.userId,
+        event
+      }
+    }
+
+    @Emit("routesContentMenuHide")
+    private routesContentMenuHide() {
+      return "";
+    }
 
   }
 </script>
@@ -75,7 +101,7 @@
       padding-left: 8px;
       position: absolute;
       right: 0;
-      left: 52px;
+      left: 60px;
       top: 0;
       bottom: 0;
     }
@@ -86,7 +112,7 @@
       left: 0;
       top: 0;
       bottom: 0;
-      width: 52px;
+      width: 60px;
       text-align: right;
       line-height: 52px;
 
@@ -96,7 +122,7 @@
         height: 36px;
         border-radius: 100%;
         position: absolute;
-        left: 16px;
+        left: 24px;
         top: 8px;
         background-color: rgba(0, 0, 0, 0.6);
       }
